@@ -29,14 +29,17 @@ pool.connect()
 // ----------------------------
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ 
+  origin: process.env.FRONTEND_URL || "http://localhost:3000", 
+  credentials: true 
+}));
 
 // ----------------------------
 // Sessions (needed for passport)
 // ----------------------------
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "default_secret",
     resave: false,
     saveUninitialized: false,
   })
@@ -77,8 +80,8 @@ app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "em
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "http://localhost:3000/login",
-    successRedirect: "http://localhost:3000/dashboard",
+    failureRedirect: (process.env.FRONTEND_URL || "http://localhost:3000") + "/login",
+    successRedirect: (process.env.FRONTEND_URL || "http://localhost:3000") + "/dashboard",
   })
 );
 
@@ -108,7 +111,6 @@ app.get("/api/menu-items", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch menu items" });
   }
 });
-
 
 // Orders
 app.post("/api/orders", async (req, res) => {
@@ -157,7 +159,6 @@ app.post("/api/orders", async (req, res) => {
 });
 
 // ----------------------------
-// Start Server
+// Export handler for Vercel
 // ----------------------------
-const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`🚀 API listening on ${port}`));
+export default app;
